@@ -11,6 +11,12 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(rethinking)
 ```
+```{r}
+install.packages(c("coda","mvtnorm","devtools","loo","dagitty","shape"))
+devtools::install_github("rmcelreath/rethinking")
+```
+
+
 
 # Exercises for Class 1
 
@@ -51,7 +57,7 @@ mtext("20 points")
 
 ```{r}
 
-# Your answer here.
+(2)
 
 ```
 
@@ -59,7 +65,7 @@ mtext("20 points")
 
 ```{r}
 
-# Your answer here.
+(3)
 
 ```
 
@@ -67,66 +73,249 @@ mtext("20 points")
 
 ```{r}
 
-# Your answer here.
+(1)
 
 ```
 
 2E4.
 
-```{r}
 
-# Discuss in pairs/groups. Ask me for a hint if you feel like it.
+De Finetti's Subjective Probability
 
-```
+Bruno de Finetti was a strong proponent of subjective Bayesian probability.  This means that he didn't see probabilities as something inherent to objects or events in the world. Instead, he believed probability represents a degree of belief given a particular state of knowledge. Different people, with different information, can have different probabilities for the same event.
+
+The Globe Tossing Example
+
+When we say, "the probability of the globe landing on water is 0.7," a de Finettian interpretation is:
+
+Not an objective fact: It's not saying that the globe itself has some intrinsic property that makes it land on water 70% of the time.
+Betting behavior: Saying the probability is 0.7 means you'd be willing to bet on water with certain odds. For instance, you might bet $7 to win $3 if the globe lands on land. This reflects your degree of belief based on your available knowledge (maybe the Earth's surface composition).
+Subject to change: If we're presented with new information (e.g., someone secretly added more water to the globe), our belief, and therefore the probability we assign, could change.
+The Importance of the Observer
+
+In the globe tossing example, the following things highlight why probability is subjective in de Finetti's view:
+
+Knowledge of the globe: If someone unfamiliar with Earth estimates the probability of water, they might guess 0.5 (50/50) due to lacking specific information.
+Bias: If someone strongly believes most of the planet is land, their subjective probability of water might be lower, even if they know the actual proportions.
+Key Takeaway
+
+De Finetti's perspective  emphasizes that probability isn't about the nature of a "random" event like tossing a globe.  Instead, it reflects the way we reason about the world given incomplete information. This makes probability a powerful tool for making decisions under uncertainty, but it's  crucial to remember its subjective roots.
+
+
 
 ### Medium
 
 2M1.
 
-```{r}
 
+### First senario 
+```{r}
 # Write your code here.
+# define grid
+p_grid <- seq(from = 0, to = 1, length.out = 20)
+
+# define uniform prior
+prior <- rep(1, 20)
+
+# compute likelihood for W, W, W
+likelihood <- dbinom(3, size = 3, prob = p_grid)
+
+# compute unstandardized posterior
+unstd.posterior <- likelihood * prior
+
+# standardize the posterior
+posterior <- unstd.posterior / sum(unstd.posterior)
+
+# plot
+plot(p_grid, posterior, type = "b", xlab = "probability of water", ylab = "posterior probability",
+     main = "Posterior for W, W, W")
+
+
+```
+### Second scenario
+
+```{r}
+# compute likelihood for W, W, W, L
+likelihood <- dbinom(3, size = 4, prob = p_grid)
+
+# compute unstandardized posterior
+unstd.posterior <- likelihood * prior
+
+# standardize the posterior
+posterior <- unstd.posterior / sum(unstd.posterior)
+
+# plot
+plot(p_grid, posterior, type = "b", xlab = "probability of water", ylab = "posterior probability",
+     main = "Posterior for W, W, W, L")
+
+```
+```{r}
+# compute likelihood for L, W, W, L, W, W, W
+likelihood <- dbinom(5, size = 7, prob = p_grid)
+
+# compute unstandardized posterior
+unstd.posterior <- likelihood * prior
+
+# standardize the posterior
+posterior <- unstd.posterior / sum(unstd.posterior)
+
+# plot
+plot(p_grid, posterior, type = "b", xlab = "probability of water", ylab = "posterior probability",
+     main = "Posterior for L, W, W, L, W, W, W")
 
 ```
 
 2M2.
 
 ```{r}
+# define grid
+p_grid <- seq(from = 0, to = 1, length.out = 20)
 
-# In the book, McElreath says that we can do much better than choosing a uniform prior for estimating the coverage of water. Is this what we are doing here? How does that impact our estimation?
+# define step-like prior
+prior <- ifelse(p_grid < 0.5, 0, 1)
+
+# Scenario 1: Observations W, W, W
+likelihood1 <- dbinom(3, size = 3, prob = p_grid)
+unstd.posterior1 <- likelihood1 * prior
+posterior1 <- unstd.posterior1 / sum(unstd.posterior1)
+plot(p_grid, posterior1, type = "b", xlab = "probability of water", ylab = "posterior probability",
+     main = "Posterior for W, W, W with step-like prior")
+
+# Scenario 2: Observations W, W, W, L
+likelihood2 <- dbinom(3, size = 4, prob = p_grid)
+unstd.posterior2 <- likelihood2 * prior
+posterior2 <- unstd.posterior2 / sum(unstd.posterior2)
+plot(p_grid, posterior2, type = "b", xlab = "probability of water", ylab = "posterior probability",
+     main = "Posterior for W, W, W, L with step-like prior")
+
+# Scenario 3: Observations L, W, W, L, W, W, W
+likelihood3 <- dbinom(5, size = 7, prob = p_grid)
+unstd.posterior3 <- likelihood3 * prior
+posterior3 <- unstd.posterior3 / sum(unstd.posterior3)
+plot(p_grid, posterior3, type = "b", xlab = "probability of water", ylab = "posterior probability",
+     main = "Posterior for L, W, W, L, W, W, W with step-like prior")
 
 ```
 
 2M3.
 
+Suppose there are two globes, one for Earth and one for Mars. The Earth globe is 70% covered
+in water. The Mars globe is 100% land. Further suppose that one of these globes—you don’t know
+which—was tossed in the air and produced a “land” observation. Assume that each globe was equally
+likely to be tossed. Show that the posterior probability that the globe was the Earth, conditional on
+seeing “land” (Pr(Earth|land)), is 0.23.
+
 ```{r}
 
-# Use the Bayes formula!
+pr_earth = 0.5
+
+pr_mars = 0.5
+
+pr_land_given_earth = 0.3
+
+pr_land_given_mars = 1
+
+
+# Calculate the total probability of observing land
+pr_land = pr_earth * pr_land_given_earth + pr_mars * pr_land_given_mars
+
+# Calculate the posterior probability of the Earth given land
+pr_earth_given_land = (pr_land_given_earth * pr_earth) / pr_land
+
+print(pr_earth_given_land)
 
 ```
+The posterior probability that the globe was the Earth, conditional on seeing "land" (Pr(Earth∣land)), is approximately 0.23.
 
-For the exercises below, I highly suggest you to grab a piece of paper and try to solve the problems in a 'visual' way.
+
+
+For the exercises below, I highly suggest you to grab a piece of paper and try to solve the problems in a 'visual' way.'
+
+
+Suppose you have a deck with only three cards. Each card has two sides, and each side is either
+black or white. One card has two black sides. The second card has one black and one white side. The
+third card has two white sides. Now suppose all three cards are placed in a bag and shuffled. Someone
+reaches into the bag and pulls out a card and places it flat on a table. A black side is shown facing up,
+but you don’t know the color of the side facing down. Show that the probability that the other side is
+also black is 2/3. Use the counting method (Section 2 of the chapter) to approach this problem. This
+means counting up the ways that each card could produce the observed data (a black side facing up
+on the table).
+
+
+
 
 2M4.
 
 ```{r}
+# Define the scenarios
+# BB = Black/Black, BW = Black/White
+# We only consider these two because WW (White/White) cannot show a black side up
 
-# Write your probability here.
+# The possible outcomes where a black side is facing up
+possible_outcomes <- c('BB1', 'BB2', 'BW')
+
+# Count the total number of outcomes where a black side is up
+total_black_up <- length(possible_outcomes)
+
+# Count the outcomes where the other side is also black
+# Only the BB card can have the other side black, and it has 2 sides that can be up
+black_on_both_sides <- sum(substr(possible_outcomes, 1, 2) == 'BB')
+
+# Calculate the probability
+probability_black_other_side <- black_on_both_sides / total_black_up
+
+# Print the probability
+print(paste("Probability that the other side is also black:", probability_black_other_side))
 
 ```
 
-2M5.
+2M5.Now suppose there are four cards: B/B, B/W, W/W, and another B/B. Again suppose a card is
+drawn from the bag and a black side appears face up. Again calculate the probability that the other
+side is black.
 
 ```{r}
 
-# Write your probability here.
+# Define the scenarios considering the additional BB card
+# BB1, BB2 are the two Black/Black cards, and BW is the Black/White card
+possible_outcomes <- c('BB1_1', 'BB1_2', 'BB2_1', 'BB2_2', 'BW')
+
+# Count the total number of outcomes where a black side is up
+total_black_up <- length(possible_outcomes)
+
+# Count the outcomes where the other side is also black
+# Both BB cards can have the other side black, each with 2 sides that can be up
+black_on_both_sides <- sum(substr(possible_outcomes, 1, 2) == 'BB')
+
+# Calculate the probability
+probability_black_other_side <- black_on_both_sides / total_black_up
+
+# Print the probability
+print(paste("Probability that the other side is also black:", probability_black_other_side))
 
 ```
 
-2M6.
+2M6. Imagine that black ink is heavy, and so cards with black sides are heavier than cards with white
+sides. As a result, it’s less likely that a card with black sides is pulled from the bag. So again assume
+there are three cards: B/B, B/W, and W/W. After experimenting a number of times, you conclude that
+for every way to pull the B/B card from the bag, there are 2 ways to pull the B/W card and 3 ways to
+pull the W/W card. Again suppose that a card is pulled and a black side appears face up. Show that
+the probability the other side is black is now 0.5. Use the counting method, as before.
 
 ```{r}
+# Define the weighted chances for pulling each card
+weighted_chances <- c(BB = 1, BW = 2, WW = 3)
 
-# Write your probability here.
+# Calculate weighted outcomes for a black side being up
+weighted_outcomes_black_side_up <- weighted_chances['BB'] * 2 + weighted_chances['BW'] * 1
+
+# Calculate weighted outcomes where the other side is also black (only possible for BB)
+weighted_outcomes_black_both_sides <- weighted_chances['BB'] * 2
+
+# Calculate the probability
+probability_black_other_side <- weighted_outcomes_black_both_sides / weighted_outcomes_black_side_up
+
+# Print the probability
+print(paste("Probability that the other side is also black:", probability_black_other_side))
+
 
 ```
